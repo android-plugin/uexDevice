@@ -1,5 +1,6 @@
 package org.zywx.wbpalmstar.plugin.uexdevice;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Service;
 import android.content.ActivityNotFoundException;
@@ -8,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.hardware.Camera;
@@ -22,6 +24,8 @@ import android.os.Environment;
 import android.os.StatFs;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.text.format.Formatter;
@@ -36,6 +40,7 @@ import org.json.JSONObject;
 import org.zywx.wbpalmstar.base.BDebug;
 import org.zywx.wbpalmstar.base.ResoureFinder;
 import org.zywx.wbpalmstar.engine.DataHelper;
+import org.zywx.wbpalmstar.engine.EBrowserActivity;
 import org.zywx.wbpalmstar.engine.EBrowserView;
 import org.zywx.wbpalmstar.engine.universalex.EUExBase;
 import org.zywx.wbpalmstar.engine.universalex.EUExCallback;
@@ -942,17 +947,25 @@ public class EUExDevice extends EUExBase {
     }
 
     private boolean isCameraUsable() {
-        boolean canUse = true;
-        Camera mCamera = null;
-        try {
-            mCamera = Camera.open();
-        } catch (Exception e) {
-            canUse = false;
+        // android6.0以上动态权限申请
+        if (mContext.checkCallingOrSelfPermission(Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED){
+            requsetPerssions(Manifest.permission.CAMERA, "请先申请权限"
+                    + Manifest.permission.CAMERA, 1);
+            return false;
+        } else {
+            boolean canUse = true;
+            Camera mCamera = null;
+            try {
+                mCamera = Camera.open();
+            } catch (Exception e) {
+                canUse = false;
+            }
+            if (canUse) {
+                mCamera.release();
+            }
+            return canUse;
         }
-        if (canUse) {
-            mCamera.release();
-        }
-        return canUse;
     }
 
     public Object openSetting(final String [] params) {
@@ -1044,6 +1057,27 @@ public class EUExDevice extends EUExBase {
     private void unregisterReceiver() {
         if (mConnectChangeReceiver != null)
             mContext.unregisterReceiver(mConnectChangeReceiver);
+    }
+
+    @Override
+    public void onRequestPermissionResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionResult(requestCode, permissions, grantResults);
+        if (requestCode == 1){
+            if (grantResults[0] != PackageManager.PERMISSION_DENIED){
+//                isCameraUsable();
+            } else {
+                // 对于 ActivityCompat.shouldShowRequestPermissionRationale
+                // 1：用户拒绝了该权限，没有勾选"不再提醒"，此方法将返回true。
+                // 2：用户拒绝了该权限，有勾选"不再提醒"，此方法将返回 false。
+                // 3：如果用户同意了权限，此方法返回false
+                // 拒绝了权限且勾选了"不再提醒"
+                if (!ActivityCompat.shouldShowRequestPermissionRationale((EBrowserActivity)mContext, permissions[0])) {
+                    Toast.makeText(mContext, "请先设置权限" + permissions[0], Toast.LENGTH_LONG).show();
+                } else {
+                    requsetPerssions(Manifest.permission.CAMERA, "请先申请权限" + permissions[0], 1);
+                }
+            }
+        }
     }
 
 }
