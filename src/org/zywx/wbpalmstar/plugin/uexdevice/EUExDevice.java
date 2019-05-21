@@ -1033,10 +1033,12 @@ public class EUExDevice extends EUExBase {
         }
     }
     private void registerReceiver() {
+
         IntentFilter filter = new IntentFilter(
                 ConnectivityManager.CONNECTIVITY_ACTION);
         mConnectChangeReceiver = new ConnectChangeReceiver();
-        mContext.registerReceiver(mConnectChangeReceiver, filter);
+        //采用自定义权限方式去注册广播
+        mContext.registerReceiver(mConnectChangeReceiver, filter,"com.appcan.uexdevice.permission",null);
     }
 
     private void unregisterReceiver() {

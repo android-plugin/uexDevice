@@ -10,4 +10,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <permission android:name="com.appcan.uexdevice.permission"
+        android:protectionLevel="normal"></permission>
+    <uses-permission android:name="com.appcan.uexdevice.permission"></uses-permission>
 </manifest>
