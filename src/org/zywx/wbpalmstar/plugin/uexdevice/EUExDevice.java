@@ -311,6 +311,10 @@ public class EUExDevice extends EUExBase {
                     && telephonyManager.getDeviceId() != null) {
                 imei = telephonyManager.getDeviceId();
             }
+            if(null==imei|| "unknown".equals(imei)) {
+                imei=  Settings.System.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
+            }
+
         } catch (SecurityException e) {
             Toast.makeText(mContext, finder.getString("no_permisson_declare"),
                     Toast.LENGTH_SHORT).show();
