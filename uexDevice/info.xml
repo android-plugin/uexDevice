@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <uexplugins>
     <plugin
-        uexName="uexDevice" version="4.0.4" build="4">
-        <info>4.开启关闭屏幕常亮失效</info>
+        uexName="uexDevice" version="4.4.8" build="8">
+        <info>8.修改广播动态根据包名去生成定制权限，避免权限冲突</info>
+        <info>7.修改部分手机获取IMEI号为空</info>
+        <build>6.安全检测修改广播的动态注册方式</build>
+        <build>5.添加动态权限申请</build>
+        <build>4.开启关闭屏幕常亮失效</build>
         <build>3.修改SharedPreferences的读写权限</build>
         <build>2.增加网络状态监听的功能</build>
         <build>1.新增获取ip接口</build>
