@@ -26,8 +26,8 @@
     </application>
 
     <!-- uexDevice -->
-    <permission android:name="com.appcan.uexdevice.permission" android:protectionLevel="normal"></permission>
-    <uses-permission android:name="com.appcan.uexdevice.permission"></uses-permission>
+    <permission android:name="${applicationId}.uexdevice.permission" android:protectionLevel="normal"></permission>
+    <uses-permission android:name="${applicationId}.uexdevice.permission"></uses-permission>
    <uses-permission android:name="android.permission.CAMERA" />
    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />

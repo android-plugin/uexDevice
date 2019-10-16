@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <uexplugins>
     <plugin
-        uexName="uexDevice" version="4.4.7" build="7">
+        uexName="uexDevice" version="4.4.8" build="8">
+        <info>8.修改广播动态根据包名去生成定制权限，避免权限冲突</info>
         <info>7.修改部分手机获取IMEI号为空</info>
         <build>6.安全检测修改广播的动态注册方式</build>
         <build>5.添加动态权限申请</build>

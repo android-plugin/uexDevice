@@ -1055,7 +1055,7 @@ public class EUExDevice extends EUExBase {
                 ConnectivityManager.CONNECTIVITY_ACTION);
         mConnectChangeReceiver = new ConnectChangeReceiver();
         //采用自定义权限方式去注册广播
-        mContext.registerReceiver(mConnectChangeReceiver, filter,"com.appcan.uexdevice.permission",null);
+        mContext.registerReceiver(mConnectChangeReceiver, filter,mContext.getPackageName()+".uexdevice.permission",null);
     }
 
     private void unregisterReceiver() {
