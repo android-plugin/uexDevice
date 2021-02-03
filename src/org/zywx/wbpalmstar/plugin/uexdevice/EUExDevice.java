@@ -1,6 +1,7 @@
 package org.zywx.wbpalmstar.plugin.uexdevice;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Service;
 import android.content.ActivityNotFoundException;
@@ -44,6 +45,7 @@ import org.zywx.wbpalmstar.engine.EBrowserActivity;
 import org.zywx.wbpalmstar.engine.EBrowserView;
 import org.zywx.wbpalmstar.engine.universalex.EUExBase;
 import org.zywx.wbpalmstar.engine.universalex.EUExCallback;
+import org.zywx.wbpalmstar.engine.universalex.EUExUtil;
 import org.zywx.wbpalmstar.plugin.uexdevice.vo.FunctionDataVO;
 import org.zywx.wbpalmstar.plugin.uexdevice.vo.ResultIsEnableVO;
 import org.zywx.wbpalmstar.plugin.uexdevice.vo.ResultSettingVO;
@@ -79,7 +81,9 @@ public class EUExDevice extends EUExBase {
     public static final int F_JV_CONNECT_GPRS = 2;
     public static final int F_JV_CONNECT_4G = 3;
     public static final int F_JV_CONNECT_UNKNOWN = 4;
-    private EUExDevice mEUExDevice;
+
+    public static final int PERMISSION_REQUEST_CODE_READ_PHONE_STATE_GET_IMEI = 101;
+    public static final int PERMISSION_REQUEST_CODE_READ_PHONE_STATE_GET_SIM_SN = 102;
 
     private Vibrator m_v;
 
@@ -100,7 +104,6 @@ public class EUExDevice extends EUExBase {
     public EUExDevice(Context context, EBrowserView inParent) {
         super(context, inParent);
         finder = ResoureFinder.getInstance(context);
-        mEUExDevice = this;
     }
 
     /**
@@ -155,7 +158,6 @@ public class EUExDevice extends EUExBase {
      */
     public String getInfo(String[] params) {
         if (params.length > 0) {
-            JSONObject jsonObj = new JSONObject();
             String outKey = null;
             String outStr = null;
             int id = Integer.valueOf(params[0]);
@@ -202,7 +204,8 @@ public class EUExDevice extends EUExBase {
                     break;
                 case EUExCallback.F_C_IMEI:
                     outKey = EUExCallback.F_JK_IMEI;
-                    outStr = getDeviceIMEI();
+                    outStr = getDeviceIMEIWithPermissionRequest();
+                    // 注意：由于需要申请权限的异步操作，所以可能导致首次同步返回结果为null，但是异步js回调可以保证获取结果。
                     break;
                 case EUExCallback.F_C_DEVICE_TOKEN:
                     outKey = EUExCallback.F_JK_DEVICE_TOKEN;
@@ -237,7 +240,7 @@ public class EUExDevice extends EUExBase {
                     break;
                 case F_C_SIM_SERIALNUMBER:
                     outKey = F_JK_SIM_SERIALNUMBER;
-                    outStr =getSimSerialNumber();
+                    outStr = getSimSerialNumberWithPermissionRequest();
                     break;
                 case F_C_SOFT_TOKEN:
                     outKey = F_JK_SOFT_TOKEN;
@@ -246,17 +249,27 @@ public class EUExDevice extends EUExBase {
                 default:
                     break;
             }
-            try {
-                jsonObj.put(outKey, outStr);
-                jsCallback(CALLBACK_NAME_DEVICE_GET_INFO, 0,
-                        EUExCallback.F_C_JSON, jsonObj.toString());
-                return outStr;
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
+            callbackGetInfo(outKey, outStr);
+            return outStr;
         }
         return null;
+    }
+
+    /**
+     * getInfo 异步回调
+     *
+     * @param outKey
+     * @param outStr
+     */
+    private void callbackGetInfo(String outKey, String outStr){
+        try {
+            JSONObject jsonObj = new JSONObject();
+            jsonObj.put(outKey, outStr);
+            jsCallback(CALLBACK_NAME_DEVICE_GET_INFO, 0,
+                    EUExCallback.F_C_JSON, jsonObj.toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -302,7 +315,21 @@ public class EUExDevice extends EUExBase {
     /**
      * 获得设备的IMEI号
      */
-    private String getDeviceIMEI() {
+    private String getDeviceIMEIWithPermissionRequest() {
+        if (mContext.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE)
+                != PackageManager.PERMISSION_GRANTED){
+            final String hintMsg = EUExUtil.getString("plugin_uexdevice_request_read_phone_state_permission_hint_message");
+            requsetPerssions(Manifest.permission.READ_PHONE_STATE, hintMsg, PERMISSION_REQUEST_CODE_READ_PHONE_STATE_GET_IMEI);
+            BDebug.i(tag, "getDeviceIMEIWithPermissionRequest start request");
+            return null;
+        }else{
+            BDebug.i(tag, "getDeviceIMEIWithPermissionRequest permission GRANTED");
+            return getDeviceIMEI();
+        }
+    }
+
+    @SuppressLint("HardwareIds")
+    private String getDeviceIMEI(){
         String imei = "unknown";
         try {
             TelephonyManager telephonyManager = (TelephonyManager) mContext
@@ -311,20 +338,36 @@ public class EUExDevice extends EUExBase {
                     && telephonyManager.getDeviceId() != null) {
                 imei = telephonyManager.getDeviceId();
             }
-            if(null==imei|| "unknown".equals(imei)) {
-                imei=  Settings.System.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
-            }
-
         } catch (SecurityException e) {
             Toast.makeText(mContext, finder.getString("no_permisson_declare"),
                     Toast.LENGTH_SHORT).show();
         }
+        if(TextUtils.isEmpty(imei) || "unknown".equals(imei)) {
+            // 若没有权限，或者获取为空，则以AndroidID为替代品
+            imei =  Settings.System.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
+        }
         return imei;
     }
-/**
- * 获得设备的序列号
- * @return
- */
+
+    /**
+     * 获得设备的序列号
+     * @return
+     */
+    @SuppressLint("HardwareIds")
+    private String getSimSerialNumberWithPermissionRequest(){
+        if (mContext.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE)
+                != PackageManager.PERMISSION_GRANTED){
+            final String hintMsg = EUExUtil.getString("plugin_uexdevice_request_read_phone_state_permission_hint_message");
+            requsetPerssions(Manifest.permission.READ_PHONE_STATE, hintMsg, PERMISSION_REQUEST_CODE_READ_PHONE_STATE_GET_SIM_SN);
+            BDebug.i(tag, "getSimSerialNumberWithPermissionRequest start request");
+            return null;
+        }else{
+            BDebug.i(tag, "getSimSerialNumberWithPermissionRequest permission GRANTED");
+            return getSimSerialNumber();
+        }
+    }
+
+    @SuppressLint("HardwareIds")
     private String getSimSerialNumber(){
         String serialNumber = "unknown";
         try {
@@ -340,6 +383,7 @@ public class EUExDevice extends EUExBase {
         }
         return serialNumber;
     }
+
     private String getRestDiskSize() {
         if (!Environment.getExternalStorageState().equals(
                 Environment.MEDIA_MOUNTED)) {
@@ -413,7 +457,7 @@ public class EUExDevice extends EUExBase {
      */
     private String getWIFISupport() {
         String supported = "0";// 默认不支持
-        if ((WifiManager) mContext.getSystemService(Context.WIFI_SERVICE) != null) {// 支持WIFI
+        if ((WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE) != null) {// 支持WIFI
             supported = "1";
         }
         return supported;
@@ -579,9 +623,9 @@ public class EUExDevice extends EUExBase {
     private String getMacAddress() {
         String macAddress = "unKnown";
         if (Build.VERSION.SDK_INT>22){
-            macAddress=getWifiMacAddress();
+            macAddress = getWifiMacAddress();
         }else{
-            WifiManager wifiMgr = (WifiManager) mContext
+            WifiManager wifiMgr = (WifiManager) mContext.getApplicationContext()
                     .getSystemService(Context.WIFI_SERVICE);
             if (wifiMgr != null) {
                 WifiInfo info = wifiMgr.getConnectionInfo();
@@ -656,7 +700,7 @@ public class EUExDevice extends EUExBase {
 
     public void screenCapture(final String[] params) {
         if (params == null || params.length < 1) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
         double quality = 1.0;
@@ -664,7 +708,7 @@ public class EUExDevice extends EUExBase {
         try {
             quality = Double.parseDouble(params[0]);
         } catch (NumberFormatException e) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -734,7 +778,7 @@ public class EUExDevice extends EUExBase {
     }
     public void handleSetAudioCategory(String [] params) {
         if (params == null || params.length < 1) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
         //0 扩音器  1 听筒
@@ -745,7 +789,7 @@ public class EUExDevice extends EUExBase {
                 status = 0;
             }
         } catch (NumberFormatException e) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
         AudioManager am = (AudioManager) ((Activity)mContext).getSystemService(Context.AUDIO_SERVICE);
@@ -767,18 +811,18 @@ public class EUExDevice extends EUExBase {
     }
     public void handleSetVolume(String [] params) {
         if (params == null || params.length < 1) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
         double value = 0.0;
         try {
             value = Double.parseDouble(params[0]);
         } catch (NumberFormatException e) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
         if (value < 0 || value > 1) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
         AudioManager am = (AudioManager) ((Activity)mContext).getSystemService(Context.AUDIO_SERVICE);
@@ -821,7 +865,7 @@ public class EUExDevice extends EUExBase {
 
     public void handleSetScreenAlwaysBright(String [] params) {
         if (params == null || params.length < 1) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
         int status = 0;
@@ -831,7 +875,7 @@ public class EUExDevice extends EUExBase {
                 status = 0;
             }
         } catch (NumberFormatException e) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
         if (status == 1) {
@@ -853,18 +897,18 @@ public class EUExDevice extends EUExBase {
 
     public void handleSetScreenBrightness(String [] params) {
         if (params == null || params.length < 1) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
         float brightness = 0;
         try {
             brightness = Float.parseFloat(params[0]);
         } catch (NumberFormatException e) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
         if (brightness < 0 || brightness > 1) {
-            Toast.makeText(mContext, finder.getString("plugin_uexDevice_invalid_params"), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, finder.getString("plugin_uexdevice_invalid_params"), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -1001,11 +1045,13 @@ public class EUExDevice extends EUExBase {
         }
         return resultVO;
     }
+
     public String getIP(String args[]) {
-        WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+        WifiManager wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         String ipAddress = Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
         return ipAddress;
     }
+
     private void callBackPluginJs(String methodName, String jsonData){
         String js = SCRIPT_HEADER + "if(" + methodName + "){"
                 + methodName + "('" + jsonData + "');}";
@@ -1039,23 +1085,19 @@ public class EUExDevice extends EUExBase {
     }
 
     public void startNetStatusListener(String[] params) {
-        if (mEUExDevice != null) {
-            mEUExDevice.registerReceiver();
-        }
+        registerReceiver();
     }
 
     public void stopNetStatusListener(String[] params) {
-        if (mEUExDevice != null) {
-            mEUExDevice.unregisterReceiver();
-        }
+        unregisterReceiver();
     }
-    private void registerReceiver() {
 
+    private void registerReceiver() {
         IntentFilter filter = new IntentFilter(
                 ConnectivityManager.CONNECTIVITY_ACTION);
         mConnectChangeReceiver = new ConnectChangeReceiver();
         //采用自定义权限方式去注册广播
-        mContext.registerReceiver(mConnectChangeReceiver, filter,mContext.getPackageName()+".uexdevice.permission",null);
+        mContext.registerReceiver(mConnectChangeReceiver, filter,mContext.getPackageName() + ".uexdevice.permission",null);
     }
 
     private void unregisterReceiver() {
@@ -1081,6 +1123,16 @@ public class EUExDevice extends EUExBase {
                     requsetPerssions(Manifest.permission.CAMERA, "请先申请权限" + permissions[0], 1);
                 }
             }
+        }else if (requestCode == PERMISSION_REQUEST_CODE_READ_PHONE_STATE_GET_IMEI){
+            // 申请读取设备信息权限结果
+            String outKey = EUExCallback.F_JK_IMEI;
+            String outStr = getDeviceIMEI();
+            callbackGetInfo(outKey, outStr);
+        }else if (requestCode == PERMISSION_REQUEST_CODE_READ_PHONE_STATE_GET_SIM_SN){
+            // 申请读取设备信息权限结果
+            String outKey = F_JK_SIM_SERIALNUMBER;
+            String outStr = getSimSerialNumber();
+            callbackGetInfo(outKey, outStr);
         }
     }
 

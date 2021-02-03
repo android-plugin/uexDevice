@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" >
+    <permission android:name="${applicationId}.uexdevice.permission" android:protectionLevel="normal" />
+    <uses-permission android:name="${applicationId}.uexdevice.permission" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -10,6 +12,4 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <permission android:name="${applicationId}.uexdevice.permission" android:protectionLevel="normal"></permission>
-    <uses-permission android:name="${applicationId}.uexdevice.permission"></uses-permission>
 </manifest>

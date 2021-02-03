@@ -1,4 +1,5 @@
 <resources>
     <!--uexDevice-->
-    <string name="plugin_uexDevice_invalid_params">Invalid Params</string>
+    <string name="plugin_uexdevice_invalid_params">Invalid Params</string>
+    <string name="plugin_uexdevice_request_read_phone_state_permission_hint_message">应用需要额外的权限以获取设备硬件信息</string>
 </resources>
