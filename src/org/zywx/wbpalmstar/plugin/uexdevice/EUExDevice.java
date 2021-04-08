@@ -90,6 +90,8 @@ public class EUExDevice extends EUExBase {
     private ResoureFinder finder;
     private static ConnectChangeReceiver mConnectChangeReceiver;
 
+    private Context applicationContext;
+
     private class ConnectChangeReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -104,6 +106,7 @@ public class EUExDevice extends EUExBase {
     public EUExDevice(Context context, EBrowserView inParent) {
         super(context, inParent);
         finder = ResoureFinder.getInstance(context);
+        applicationContext = context.getApplicationContext();
     }
 
     /**
@@ -123,6 +126,10 @@ public class EUExDevice extends EUExBase {
                 Toast.makeText(mContext,
                         finder.getString("no_permisson_declare"),
                         Toast.LENGTH_SHORT).show();
+            } catch (Exception e){
+                if (BDebug.DEBUG){
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -331,6 +338,10 @@ public class EUExDevice extends EUExBase {
     @SuppressLint("HardwareIds")
     private String getDeviceIMEI(){
         String imei = "unknown";
+        if (isDestroyedInstance()){
+            BDebug.w(tag, "getDeviceIMEI error. isDestroyedInstance() true, stopped.");
+            return imei;
+        }
         try {
             TelephonyManager telephonyManager = (TelephonyManager) mContext
                     .getSystemService(Context.TELEPHONY_SERVICE);
@@ -341,6 +352,10 @@ public class EUExDevice extends EUExBase {
         } catch (SecurityException e) {
             Toast.makeText(mContext, finder.getString("no_permisson_declare"),
                     Toast.LENGTH_SHORT).show();
+        } catch (Exception e){
+            if (BDebug.DEBUG){
+                e.printStackTrace();
+            }
         }
         if(TextUtils.isEmpty(imei) || "unknown".equals(imei)) {
             // 若没有权限，或者获取为空，则以AndroidID为替代品
@@ -370,6 +385,10 @@ public class EUExDevice extends EUExBase {
     @SuppressLint("HardwareIds")
     private String getSimSerialNumber(){
         String serialNumber = "unknown";
+        if (isDestroyedInstance()){
+            BDebug.w(tag, "getSimSerialNumber error. isDestroyedInstance() true, stopped.");
+            return serialNumber;
+        }
         try {
             TelephonyManager telephonyManager = (TelephonyManager) mContext
                     .getSystemService(Context.TELEPHONY_SERVICE);
@@ -380,6 +399,10 @@ public class EUExDevice extends EUExBase {
         } catch (SecurityException e) {
             Toast.makeText(mContext, finder.getString("no_permisson_declare"),
                     Toast.LENGTH_SHORT).show();
+        } catch (Exception e){
+            if (BDebug.DEBUG){
+                e.printStackTrace();
+            }
         }
         return serialNumber;
     }
@@ -500,6 +523,10 @@ public class EUExDevice extends EUExBase {
         } catch (SecurityException e) {
             Toast.makeText(mContext, finder.getString("no_permisson_declare"),
                     Toast.LENGTH_SHORT).show();
+        } catch (Exception e){
+            if (BDebug.DEBUG){
+                e.printStackTrace();
+            }
         }
 
         return support;
@@ -526,6 +553,10 @@ public class EUExDevice extends EUExBase {
         } catch (SecurityException e) {
             Toast.makeText(mContext, finder.getString("no_permisson_declare"),
                     Toast.LENGTH_SHORT).show();
+        } catch (Exception e){
+            if (BDebug.DEBUG){
+                e.printStackTrace();
+            }
         }
         return support;
     }
@@ -580,6 +611,10 @@ public class EUExDevice extends EUExBase {
         } catch (SecurityException e) {
             Toast.makeText(context, finder.getString("no_permisson_declare"),
                     Toast.LENGTH_SHORT).show();
+        } catch (Exception e){
+            if (BDebug.DEBUG){
+                e.printStackTrace();
+            }
         }
         return status;
     }
@@ -1103,6 +1138,15 @@ public class EUExDevice extends EUExBase {
     private void unregisterReceiver() {
         if (mConnectChangeReceiver != null)
             mContext.unregisterReceiver(mConnectChangeReceiver);
+    }
+
+    /**
+     * 判断是否本页面已经被销毁
+     *
+     * @return
+     */
+    private boolean isDestroyedInstance(){
+        return mContext == null;
     }
 
     @Override
