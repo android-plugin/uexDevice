@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <uexplugins>
     <plugin
-        uexName="uexDevice" version="4.4.8" build="8">
-        <info>8.修改广播动态根据包名去生成定制权限，避免权限冲突</info>
-        <info>7.修改部分手机获取IMEI号为空</info>
+        uexName="uexDevice" version="4.4.10" build="2021040801">
+        <info>10.修复在偶现由于页面关闭的同时调用设备信息获取接口时可能导致的闪退问题</info>
+        <build>9.获取设备信息增加了权限申请和判断逻辑，适配4.6引擎</build>
+        <build>8.修改广播动态根据包名去生成定制权限，避免权限冲突</build>
+        <build>7.修改部分手机获取IMEI号为空</build>
         <build>6.安全检测修改广播的动态注册方式</build>
         <build>5.添加动态权限申请</build>
         <build>4.开启关闭屏幕常亮失效</build>
