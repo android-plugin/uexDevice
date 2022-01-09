@@ -31,6 +31,7 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.text.format.Formatter;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
@@ -123,9 +124,12 @@ public class EUExDevice extends EUExBase {
                 }
                 m_v.vibrate(Integer.parseInt(params[0]));
             } catch (SecurityException e) {
-                Toast.makeText(mContext,
-                        finder.getString("no_permisson_declare"),
-                        Toast.LENGTH_SHORT).show();
+//                Toast.makeText(mContext,
+//                        finder.getString("no_permisson_declare"),
+//                        Toast.LENGTH_SHORT).show();
+                if (BDebug.DEBUG){
+                    Log.w(tag, "vibrate", e);
+                }
             } catch (Exception e){
                 if (BDebug.DEBUG){
                     e.printStackTrace();
@@ -167,94 +171,98 @@ public class EUExDevice extends EUExBase {
         if (params.length > 0) {
             String outKey = null;
             String outStr = null;
-            int id = Integer.valueOf(params[0]);
-            switch (id) {
-                case EUExCallback.F_C_CPU:
-                    outKey = EUExCallback.F_JK_CPU;
-                    outStr = getCPUFrequency();
-                    break;
-                case EUExCallback.F_C_OS:
-                    outKey = EUExCallback.F_JK_OS;
-                    outStr = "Android " + Build.VERSION.RELEASE;
-                    break;
-                case EUExCallback.F_C_MANUFACTURER:
-                    outKey = EUExCallback.F_JK_MANUFACTURER;
-                    outStr = Build.MANUFACTURER;
-                    break;
-                case EUExCallback.F_C_KEYBOARD:
-                    outKey = EUExCallback.F_JK_KEYBOARD;
-                    outStr = getKeyBoardType();
-                    break;
-                case EUExCallback.F_C_BLUETOOTH:
-                    outKey = EUExCallback.F_JK_BLUETOOTH;
-                    outStr = getBlueToothSupport();
-                    break;
-                case EUExCallback.F_C_WIFI:
-                    outKey = EUExCallback.F_JK_WIFI;
-                    outStr = getWIFISupport();
-                    break;
-                case EUExCallback.F_C_CAMERA:
-                    outKey = EUExCallback.F_JK_CAMERA;
-                    outStr = getCameraSupport();
-                    break;
-                case EUExCallback.F_C_GPS:
-                    outKey = EUExCallback.F_JK_GPS;
-                    outStr = getGPSSupport();
-                    break;
-                case EUExCallback.F_C_GPRS:
-                    outKey = EUExCallback.F_JK_GPRS;
-                    outStr = getMobileDataNetworkSupport();
-                    break;
-                case EUExCallback.F_C_TOUCH:
-                    outKey = EUExCallback.F_JK_TOUCH;
-                    outStr = getTouchScreenType();
-                    break;
-                case EUExCallback.F_C_IMEI:
-                    outKey = EUExCallback.F_JK_IMEI;
-                    outStr = getDeviceIMEIWithPermissionRequest();
-                    // 注意：由于需要申请权限的异步操作，所以可能导致首次同步返回结果为null，但是异步js回调可以保证获取结果。
-                    break;
-                case EUExCallback.F_C_DEVICE_TOKEN:
-                    outKey = EUExCallback.F_JK_DEVICE_TOKEN;
-                    outStr = getDeviceToken();
-                    break;
-                case EUExCallback.F_C_CONNECT_STATUS:
-                    outKey = EUExCallback.F_JK_CONNECTION_STATUS;
-                    outStr = String.valueOf(getNetworkStatus(mContext));
-                    break;
-                case EUExCallback.F_C_REST_DISK_SIZE:
-                    outKey = EUExCallback.F_JK_REST_DISK_SIZE;
-                    outStr = getRestDiskSize();
-                    break;
-                case EUExCallback.F_C_MOBILE_OPERATOR_NAME:
-                    outKey = EUExCallback.F_JK_MOBILE_OPERATOR_NAME;
-                    outStr = getMobileOperatorName();
-                    break;
-                case EUExCallback.F_C_MAC_ADDRESS:
-                    outKey = EUExCallback.F_JK_MAC_ADDRESS;
-                    outStr = getMacAddress();
-                    break;
-                case EUExCallback.F_C_MODEL:
-                    outKey = EUExCallback.F_JK_MODEL;
-                    outStr = Build.MODEL;
-                    break;
-                case F_C_WINDOWSIZE:
-                    outKey = F_JK_WINDOWSIZE;
-                    DisplayMetrics dm = new DisplayMetrics();
-                    ((Activity) mContext).getWindowManager().getDefaultDisplay()
-                            .getMetrics(dm);
-                    outStr = dm.widthPixels + "*" + dm.heightPixels;
-                    break;
-                case F_C_SIM_SERIALNUMBER:
-                    outKey = F_JK_SIM_SERIALNUMBER;
-                    outStr = getSimSerialNumberWithPermissionRequest();
-                    break;
-                case F_C_SOFT_TOKEN:
-                    outKey = F_JK_SOFT_TOKEN;
-                    outStr = null;
-                    break;
-                default:
-                    break;
+            try {
+                int id = Integer.parseInt(params[0]);
+                switch (id) {
+                    case EUExCallback.F_C_CPU:
+                        outKey = EUExCallback.F_JK_CPU;
+                        outStr = getCPUFrequency();
+                        break;
+                    case EUExCallback.F_C_OS:
+                        outKey = EUExCallback.F_JK_OS;
+                        outStr = "Android " + Build.VERSION.RELEASE;
+                        break;
+                    case EUExCallback.F_C_MANUFACTURER:
+                        outKey = EUExCallback.F_JK_MANUFACTURER;
+                        outStr = Build.MANUFACTURER;
+                        break;
+                    case EUExCallback.F_C_KEYBOARD:
+                        outKey = EUExCallback.F_JK_KEYBOARD;
+                        outStr = getKeyBoardType();
+                        break;
+                    case EUExCallback.F_C_BLUETOOTH:
+                        outKey = EUExCallback.F_JK_BLUETOOTH;
+                        outStr = getBlueToothSupport();
+                        break;
+                    case EUExCallback.F_C_WIFI:
+                        outKey = EUExCallback.F_JK_WIFI;
+                        outStr = getWIFISupport();
+                        break;
+                    case EUExCallback.F_C_CAMERA:
+                        outKey = EUExCallback.F_JK_CAMERA;
+                        outStr = getCameraSupport();
+                        break;
+                    case EUExCallback.F_C_GPS:
+                        outKey = EUExCallback.F_JK_GPS;
+                        outStr = getGPSSupport();
+                        break;
+                    case EUExCallback.F_C_GPRS:
+                        outKey = EUExCallback.F_JK_GPRS;
+                        outStr = getMobileDataNetworkSupport();
+                        break;
+                    case EUExCallback.F_C_TOUCH:
+                        outKey = EUExCallback.F_JK_TOUCH;
+                        outStr = getTouchScreenType();
+                        break;
+                    case EUExCallback.F_C_IMEI:
+                        outKey = EUExCallback.F_JK_IMEI;
+                        outStr = getDeviceIMEIWithPermissionRequest();
+                        // 注意：由于需要申请权限的异步操作，所以可能导致首次同步返回结果为null，但是异步js回调可以保证获取结果。
+                        break;
+                    case EUExCallback.F_C_DEVICE_TOKEN:
+                        outKey = EUExCallback.F_JK_DEVICE_TOKEN;
+                        outStr = getDeviceToken();
+                        break;
+                    case EUExCallback.F_C_CONNECT_STATUS:
+                        outKey = EUExCallback.F_JK_CONNECTION_STATUS;
+                        outStr = String.valueOf(getNetworkStatus(mContext));
+                        break;
+                    case EUExCallback.F_C_REST_DISK_SIZE:
+                        outKey = EUExCallback.F_JK_REST_DISK_SIZE;
+                        outStr = getRestDiskSize();
+                        break;
+                    case EUExCallback.F_C_MOBILE_OPERATOR_NAME:
+                        outKey = EUExCallback.F_JK_MOBILE_OPERATOR_NAME;
+                        outStr = getMobileOperatorName();
+                        break;
+                    case EUExCallback.F_C_MAC_ADDRESS:
+                        outKey = EUExCallback.F_JK_MAC_ADDRESS;
+                        outStr = getMacAddress();
+                        break;
+                    case EUExCallback.F_C_MODEL:
+                        outKey = EUExCallback.F_JK_MODEL;
+                        outStr = Build.MODEL;
+                        break;
+                    case F_C_WINDOWSIZE:
+                        outKey = F_JK_WINDOWSIZE;
+                        DisplayMetrics dm = new DisplayMetrics();
+                        ((Activity) mContext).getWindowManager().getDefaultDisplay()
+                                .getMetrics(dm);
+                        outStr = dm.widthPixels + "*" + dm.heightPixels;
+                        break;
+                    case F_C_SIM_SERIALNUMBER:
+                        outKey = F_JK_SIM_SERIALNUMBER;
+                        outStr = getSimSerialNumberWithPermissionRequest();
+                        break;
+                    case F_C_SOFT_TOKEN:
+                        outKey = F_JK_SOFT_TOKEN;
+                        outStr = null;
+                        break;
+                    default:
+                        break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
             callbackGetInfo(outKey, outStr);
             return outStr;
@@ -323,6 +331,10 @@ public class EUExDevice extends EUExBase {
      * 获得设备的IMEI号
      */
     private String getDeviceIMEIWithPermissionRequest() {
+        if (isDestroyedInstance()){
+            BDebug.w(tag, "getDeviceIMEIWithPermissionRequest error. isDestroyedInstance() true, stopped.");
+            return "unknown";
+        }
         if (mContext.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE)
                 != PackageManager.PERMISSION_GRANTED){
             final String hintMsg = EUExUtil.getString("plugin_uexdevice_request_read_phone_state_permission_hint_message");
@@ -345,13 +357,15 @@ public class EUExDevice extends EUExBase {
         try {
             TelephonyManager telephonyManager = (TelephonyManager) mContext
                     .getSystemService(Context.TELEPHONY_SERVICE);
-            if (telephonyManager != null
-                    && telephonyManager.getDeviceId() != null) {
+            if (telephonyManager != null) {
                 imei = telephonyManager.getDeviceId();
             }
         } catch (SecurityException e) {
-            Toast.makeText(mContext, finder.getString("no_permisson_declare"),
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mContext, finder.getString("no_permisson_declare"),
+//                    Toast.LENGTH_SHORT).show();
+            if (BDebug.DEBUG){
+                Log.w(tag, "getDeviceIMEI", e);
+            }
         } catch (Exception e){
             if (BDebug.DEBUG){
                 e.printStackTrace();
@@ -370,6 +384,10 @@ public class EUExDevice extends EUExBase {
      */
     @SuppressLint("HardwareIds")
     private String getSimSerialNumberWithPermissionRequest(){
+        if (isDestroyedInstance()){
+            BDebug.w(tag, "getSimSerialNumberWithPermissionRequest error. isDestroyedInstance() true, stopped.");
+            return "unknown";
+        }
         if (mContext.checkCallingOrSelfPermission(Manifest.permission.READ_PHONE_STATE)
                 != PackageManager.PERMISSION_GRANTED){
             final String hintMsg = EUExUtil.getString("plugin_uexdevice_request_read_phone_state_permission_hint_message");
@@ -397,8 +415,11 @@ public class EUExDevice extends EUExBase {
                 serialNumber = telephonyManager.getSimSerialNumber();
             }
         } catch (SecurityException e) {
-            Toast.makeText(mContext, finder.getString("no_permisson_declare"),
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mContext, finder.getString("no_permisson_declare"),
+//                    Toast.LENGTH_SHORT).show();
+            if (BDebug.DEBUG){
+                Log.w(tag, "getSimSerialNumber", e);
+            }
         } catch (Exception e){
             if (BDebug.DEBUG){
                 e.printStackTrace();
@@ -500,8 +521,11 @@ public class EUExDevice extends EUExBase {
                 camera.release();
             }
         } catch (Exception e) {
-            Toast.makeText(mContext, finder.getString("no_permisson_declare"),
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mContext, finder.getString("no_permisson_declare"),
+//                    Toast.LENGTH_SHORT).show();
+            if (BDebug.DEBUG){
+                Log.w(tag, "getCameraSupport", e);
+            }
         }
 
         return support;
@@ -521,8 +545,11 @@ public class EUExDevice extends EUExBase {
                 support = "1";
             }
         } catch (SecurityException e) {
-            Toast.makeText(mContext, finder.getString("no_permisson_declare"),
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mContext, finder.getString("no_permisson_declare"),
+//                    Toast.LENGTH_SHORT).show();
+            if (BDebug.DEBUG){
+                Log.w(tag, "getGPSSupport", e);
+            }
         } catch (Exception e){
             if (BDebug.DEBUG){
                 e.printStackTrace();
@@ -551,8 +578,11 @@ public class EUExDevice extends EUExBase {
                 }
             }
         } catch (SecurityException e) {
-            Toast.makeText(mContext, finder.getString("no_permisson_declare"),
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mContext, finder.getString("no_permisson_declare"),
+//                    Toast.LENGTH_SHORT).show();
+            if (BDebug.DEBUG){
+                Log.w(tag, "getMobileDataNetworkSupport", e);
+            }
         } catch (Exception e){
             if (BDebug.DEBUG){
                 e.printStackTrace();
@@ -609,8 +639,11 @@ public class EUExDevice extends EUExBase {
                 }
             }
         } catch (SecurityException e) {
-            Toast.makeText(context, finder.getString("no_permisson_declare"),
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(context, finder.getString("no_permisson_declare"),
+//                    Toast.LENGTH_SHORT).show();
+            if (BDebug.DEBUG){
+                Log.w(tag, "getNetworkStatus", e);
+            }
         } catch (Exception e){
             if (BDebug.DEBUG){
                 e.printStackTrace();
@@ -950,7 +983,15 @@ public class EUExDevice extends EUExBase {
         WindowManager.LayoutParams lp = ((Activity) mContext).getWindow().getAttributes();
         lp.screenBrightness = brightness;
         ((Activity) mContext).getWindow().setAttributes(lp);
-        Settings.System.putInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, (int) (brightness * 255));
+        try {
+            // 高版本系统中已经无法生效
+            Settings.System.putInt(mContext.getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, (int) (brightness * 255));
+        } catch (Exception e) {
+            if (BDebug.DEBUG){
+                BDebug.i(tag, "This permission warning can be ignored.");
+                e.printStackTrace();
+            }
+        }
     }
 
     public double getScreenBrightness(final String [] params) {
