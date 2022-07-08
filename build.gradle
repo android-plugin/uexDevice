@@ -62,7 +62,7 @@ android {
         applicationId 'org.zywx.wbpalmstar.widgetone.uexdevice'
         multiDexEnabled true
         minSdkVersion 22
-        targetSdkVersion 30
+        targetSdkVersion 28
     }
     productFlavors {
     }
