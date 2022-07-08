@@ -347,7 +347,7 @@ public class EUExDevice extends EUExBase {
         }
     }
 
-    @SuppressLint("HardwareIds")
+    @SuppressLint({"HardwareIds", "MissingPermission"})
     private String getDeviceIMEI(){
         String imei = "unknown";
         if (isDestroyedInstance()){
@@ -371,7 +371,7 @@ public class EUExDevice extends EUExBase {
                 e.printStackTrace();
             }
         }
-        if(TextUtils.isEmpty(imei) || "unknown".equals(imei)) {
+        if(TextUtils.isEmpty(imei) || "unknown".equals(imei) || imei.startsWith("0000")) {
             // 若没有权限，或者获取为空，则以AndroidID为替代品
             imei =  Settings.System.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
         }
@@ -400,7 +400,7 @@ public class EUExDevice extends EUExBase {
         }
     }
 
-    @SuppressLint("HardwareIds")
+    @SuppressLint({"HardwareIds", "MissingPermission"})
     private String getSimSerialNumber(){
         String serialNumber = "unknown";
         if (isDestroyedInstance()){
@@ -1126,6 +1126,16 @@ public class EUExDevice extends EUExBase {
         WifiManager wifiManager = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         String ipAddress = Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
         return ipAddress;
+    }
+
+    /**
+     * request Android Runtime permissions
+     *
+     * @param params
+     */
+    public void requestPermissions(String[] params) {
+        // TODO
+//        ContextCompat.checkSelfPermission(mContext, )
     }
 
     private void callBackPluginJs(String methodName, String jsonData){
