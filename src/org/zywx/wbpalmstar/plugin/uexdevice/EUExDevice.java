@@ -60,7 +60,6 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.NetworkInterface;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 public class EUExDevice extends EUExBase {
@@ -159,9 +158,15 @@ public class EUExDevice extends EUExBase {
     private static final int F_C_SIM_SERIALNUMBER = 19;
     private static final int F_C_SOFT_TOKEN = 20;
 
+    /**
+     * 为了避免使用READ_PHONE_STATE权限，且兼容之前老接口，故新增一个类型用于获取ANDROID_ID
+     */
+    private static final int F_C_NEW_DEVICE_ID = 101;
+
     private static final String F_JK_WINDOWSIZE = "resolutionRatio";
     private static final String F_JK_SIM_SERIALNUMBER = "simSerialNumber";
     private static final String  F_JK_SOFT_TOKEN = "softToken";
+    private static final String  F_JK_NEW_DEVICE_ID = "newDeviceID";
     /**
      * params[0]-->InfoID
      *
@@ -257,6 +262,10 @@ public class EUExDevice extends EUExBase {
                     case F_C_SOFT_TOKEN:
                         outKey = F_JK_SOFT_TOKEN;
                         outStr = null;
+                        break;
+                    case F_C_NEW_DEVICE_ID:
+                        outKey = F_JK_NEW_DEVICE_ID;
+                        outStr = DeviceUtils.getAndroidID(mContext);
                         break;
                     default:
                         break;
@@ -373,7 +382,7 @@ public class EUExDevice extends EUExBase {
         }
         if(TextUtils.isEmpty(imei) || "unknown".equals(imei) || imei.startsWith("0000")) {
             // 若没有权限，或者获取为空，则以AndroidID为替代品
-            imei =  Settings.System.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
+            imei =  DeviceUtils.getAndroidID(mContext);
         }
         return imei;
     }
@@ -788,12 +797,7 @@ public class EUExDevice extends EUExBase {
         View decorview = ((Activity)mContext).getWindow().getDecorView();
         decorview.setDrawingCacheEnabled(true);
         Bitmap bitmap = decorview.getDrawingCache();
-        File dir = new File(Environment.getExternalStorageDirectory(),
-                "image_temp");
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        String filepath = dir.getAbsolutePath() + File.separator + new Date().getTime() + ".jpg" ;
+        String filepath = DeviceUtils.generateOutputPhotoFilePath("screen_capture", mBrwView);
         File file = new File(filepath);
 
         FileOutputStream fos = null;
@@ -1202,6 +1206,10 @@ public class EUExDevice extends EUExBase {
 
     @Override
     public void onRequestPermissionResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (grantResults.length == 0) {
+            Log.e(tag, "onRequestPermissionResult grantResults.length == 0");
+            return;
+        }
         super.onRequestPermissionResult(requestCode, permissions, grantResults);
         if (requestCode == 1){
             if (grantResults[0] != PackageManager.PERMISSION_DENIED){
