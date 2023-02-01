@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <uexplugins>
     <plugin
-        uexName="uexDevice" version="4.4.12" build="2022042201">
-        <info>12.修复小米手机等的“空白通行证”导致的设备唯一标识有效性判断错误问题</info>
+        uexName="uexDevice" version="4.4.13" build="2023020101">
+        <info>13.getInfo接口增加type为101情况下，不申请通话状态隐私权限，获取设备标识</info>
+        <build>12.修复小米手机等的“空白通行证”导致的设备唯一标识有效性判断错误问题</build>
         <build>11.屏蔽权限缺失的Toast提醒；修复获取IMEI接口异常时，返回的信息不是空字符串而是异常信息的问题</build>
         <build>10.修复在偶现由于页面关闭的同时调用设备信息获取接口时可能导致的闪退问题</build>
         <build>9.获取设备信息增加了权限申请和判断逻辑，适配4.6引擎</build>
