@@ -45,6 +45,8 @@ if (UNIT_TEST) {
             UNIT_TEST.log('19:sim卡序列号=' + cSimSerialNumber);
             var cUUID = uexDevice.getInfo('20');//Android返回空
             UNIT_TEST.log('20:UUID=' + cUUID);
+            var cAndroidID = uexDevice.getInfo('101');//Android获取新设备ID，不请求通话状态权限
+            UNIT_TEST.log('101:cAndroidID=' + cAndroidID);
             if(cOS == null || cOS == ''){
                 UNIT_TEST.assert(false);
             }else{
@@ -52,7 +54,7 @@ if (UNIT_TEST) {
                 if(cOS.indexOf('Android') > -1){
                     result = (cManufacturer == null || cIMEI == null || cDeviceToken == null ||
                                     cConnectStatus == null || cRestDiskSize == null || cMobileOperatorName == null ||
-                                      cModel == null || cResolutionRatio == null || cSimSerialNumber == null);
+                                      cModel == null || cResolutionRatio == null || cSimSerialNumber == null || cAndroidID == null);
 
                 }else{
                     result = (cManufacturer == null || cIMEI == null || cDeviceToken == null || cDeviceType == null ||
